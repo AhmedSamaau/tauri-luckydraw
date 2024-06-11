@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: "TT_Fors_Medium";
+    src: url("./assets/TT_Fors_Medium.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  #root {
+    @apply h-screen;
+  }
+
+  html,
+  body {
+    @apply h-screen;
+
+    @apply select-none;
+
+    @apply bg-transparent;
+
+    @apply font-tt-fors antialiased text-white;
+
+    @apply overflow-hidden;
+  }
+
+  .tt-fors {
+    font-family: "TT_Fors_Medium", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+}
+
+.fixed-box {
+  @apply tt-fors;
+
+  border: 6px solid #333;
+  padding: 10px;
+  border-radius: 32px;
+  margin: 10px;
+  width: 200px; /* Adjust the width as per your preference */
+  height: 100px; /* Adjust the height as per your preference */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
