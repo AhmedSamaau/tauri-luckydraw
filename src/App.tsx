@@ -9,9 +9,9 @@ import { invoke } from "@tauri-apps/api";
 
 interface AppState {
   itemsMap: Record<string, boolean>;
-  currentItems: string[];
+  currentItems: Array<{ name: string; identifier: string }>;
   isDrawing: boolean;
-  selectedItem: string | null;
+  selectedItem: { name: string; identifier: string } | null;
   isFileUploaded: boolean;
   winners: Record<string, boolean>;
   backgroundUrl: string;
@@ -28,6 +28,7 @@ function App(): JSX.Element {
     winners: JSON.parse(localStorage.getItem("winners") || "{}"),
     backgroundUrl: "",
   }));
+
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
@@ -59,19 +60,16 @@ function App(): JSX.Element {
           skipEmptyLines: true,
         });
 
-        const itemsMap: Record<string, boolean> = {};
-        result.data.forEach((row) => {
-          itemsMap[row.Name] = false; // Initialize with false
-        });
-
-        const eligibleItems = Object.keys(itemsMap);
+        const itemsArray = result.data.map((row: any) => ({
+          name: row.Name,
+          identifier: row.Identifier,
+        }));
 
         setState((prevState) => ({
           ...prevState,
-          itemsMap,
-          currentItems: eligibleItems,
+          currentItems: itemsArray,
           isFileUploaded: true,
-          showConfetti: false, // Reset confetti state when a new file is uploaded
+          showConfetti: false,
         }));
       } catch (error) {
         console.error("Error loading CSV:", error);
@@ -94,8 +92,6 @@ function App(): JSX.Element {
     }
   };
 
-  console.log(state.backgroundUrl);
-
   useEffect(() => {
     // localStorage.removeItem('winners')
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -112,12 +108,12 @@ function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    let drawInterval;
+    let drawInterval: NodeJS.Timeout;
 
     const startDrawAnimation = () => {
       if (!state.selectedItem) {
         const eligibleItems = state.currentItems.filter(
-          (item) => !state.winners[item]
+          (item) => !state.winners[item.name]
         );
         const randomIndex = Math.floor(Math.random() * eligibleItems.length);
         const winner = eligibleItems[randomIndex];
@@ -125,13 +121,13 @@ function App(): JSX.Element {
         setState((prevState) => ({
           ...prevState,
           selectedItem: winner,
-          showConfetti: false, // Reset confetti state when starting a new draw
+          showConfetti: false,
         }));
       }
 
       drawInterval = setInterval(() => {
         const eligibleItems = state.currentItems.filter(
-          (item) => !state.winners[item]
+          (item) => !state.winners[item.name]
         );
         const randomIndex = Math.floor(Math.random() * eligibleItems.length);
         const winner = eligibleItems[randomIndex];
@@ -139,23 +135,22 @@ function App(): JSX.Element {
         setState((prevState) => ({
           ...prevState,
           selectedItem: winner,
-          showConfetti: false, // Reset confetti state during animation
+          showConfetti: false,
         }));
-      }, 50); // Adjust the interval duration for smoother animation
+      }, 50);
     };
 
     const stopDrawAnimation = () => {
       clearInterval(drawInterval);
 
       if (state.selectedItem) {
-        setShowConfetti(true); // Show confetti when the draw stops
+        setShowConfetti(true);
 
-        // Update winners in state and local storage
         setState((prevState) => ({
           ...prevState,
           winners: {
             ...prevState.winners,
-            [state.selectedItem!]: true,
+            [state.selectedItem!.name]: true,
           },
         }));
         localStorage.setItem("winners", JSON.stringify(state.winners));
@@ -180,9 +175,9 @@ function App(): JSX.Element {
     }));
   };
 
-  const handleButtonClick = () => {
-    toggleRandomDrawing();
-  };
+  // const handleButtonClick = () => {
+  //   toggleRandomDrawing();
+  // };
 
   return (
     <div
@@ -202,13 +197,13 @@ function App(): JSX.Element {
           state.isDrawing ? (
             <div className="animate-fadeIn">
               <div className="flex space-y-4 min-w-[1400px] flex-col px-8 py-8 bg-gradient-to-r from-white/5 via-white/15 to-white/5 mt-44 rounded-2xl items-center justify-center">
-                <span className="min-h-[100px] text-nowrap">
-                  {" "}
-                  {state.selectedItem?.split("(")[0]}
-                </span>
-                <span>
-                  {state.selectedItem && "("}
-                  {state.selectedItem?.split("(")[1]}
+                <span className="min-h-[100px] text-nowrap py-10 flex-col items-center">
+                  <div className="text-6xl mb-4">
+                    {state.selectedItem?.name}
+                  </div>
+                  <div className="text-4xl text-gray-300">
+                    {state.selectedItem?.identifier}
+                  </div>
                 </span>
               </div>
             </div>
@@ -237,18 +232,18 @@ function App(): JSX.Element {
                   <>
                     {" "}
                     <div className="flex space-y-4 min-w-[1400px] flex-col px-8 py-8 bg-gradient-to-r from-white/5 via-white/15 to-white/5 mt-44 rounded-2xl items-center justify-center">
-                      <span className="min-h-[100px] text-nowrap">
-                        {" "}
-                        {state.selectedItem?.split("(")[0]}
-                      </span>
-                      <span>
-                        {state.selectedItem && "("}
-                        {state.selectedItem?.split("(")[1]}
+                      <span className="min-h-[100px] text-nowrap py-10 flex-col items-center">
+                        <div className="text-6xl mb-4">
+                          {state.selectedItem?.name}
+                        </div>
+                        <div className="text-4xl text-gray-300">
+                          {state.selectedItem?.identifier}
+                        </div>
                       </span>
                     </div>
                   </>
                 ) : (
-                  "Press space to start the draw"
+                  " "
                 )}
               </p>
             </React.Fragment>
